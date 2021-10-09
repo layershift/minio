@@ -1,9 +1,9 @@
 type: install
-version: 1.5
+version: 6.1.2
 id: minio
 name: Minio Cluster
-homepage: https://github.com/jelastic-jps/minio
-baseUrl: https://raw.githubusercontent.com/dimkadt/minio/master
+homepage: https://github.com/layershift/minio
+baseUrl: https://raw.githubusercontent.com/layershift/minio/master
 logo: images/minio-logo-70x70.png
 
 categories: [ apps/file-manager ]
@@ -29,7 +29,6 @@ settings:
       type: list
       inputType: string
       values:
-        1: 1 node
         4: 4 nodes
         8: 8 nodes
         16: 16 nodes
@@ -54,7 +53,17 @@ onInstall:
     user: root
   - build-cluster
   - restartContainers [cp]
-  
+
+onBeforeAddNode[cp]:
+  stopEvent:
+    type: warning
+    message: Minio does not support scaling; create a new cluster and migrate.
+
+onBeforeRemoveNode[cp]:
+  stopEvent:
+    type: warning
+    message: Minio does not support scaling; create a new cluster and migrate.
+
 actions:
   build-cluster:
     script: build-cluster.js
