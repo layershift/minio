@@ -31,11 +31,6 @@ nodes:
         - type: storage
 
 onInstall:
-  - env.control.GetEnvInfo:
-      envName: ${settings.envName}
-  - setGlobals:
-      URL: ${response.env.domain}
-
   - cmd[cp]: |-
       jem passwd set -p ${globals.secretKey} -u ${globals.accessKey}
       jem service stop
@@ -52,19 +47,19 @@ onInstall:
     nodeGroup: bl
     skipEmail: true
     settings:
-      customDomains: ${globals.URL}
+      customDomains: ${env.domain}
       fallbackToX1: false
 
   - cmd[cp]: |-
-      echo "MINIO_SERVER_URL=\"https://${globals.URL}\"" >> /etc/default/minio
-      echo "MINIO_BROWSER_REDIRECT_URL=\"https://${globals.URL}\"" >> /etc/default/minio
+      echo "MINIO_SERVER_URL=\"${env.url}\"" >> /etc/default/minio
+      echo "MINIO_BROWSER_REDIRECT_URL=\"${env.url}\"" >> /etc/default/minio
 
   - install-mc
   - update-minio
 
 actions:
   - build-cluster:
-      script: build-cluster.js
+      script: ${baseUrl}/build-cluster.js
       params:
         nodeGroup: cp
         volumePath: ${globals.exportPath}
@@ -73,7 +68,7 @@ actions:
         curl https://dl.min.io/client/mc/release/linux-amd64/mc -o $HOME/mcli
         chmod +x $HOME/mcli
         echo 'export PATH="$PATH:$HOME/mcli"' >> $HOME/.bashrc
-        $HOME/mcli alias set myminio https://${globals.URL} ${globals.accessKey} ${globals.secretKey}
+        $HOME/mcli alias set myminio ${env.url} ${globals.accessKey} ${globals.secretKey}
   - update-minio:
       cmd[cp]: |-
         $HOME/mcli admin update myminio
