@@ -60,9 +60,9 @@ onInstall:
 
   - install:
       jps: ${baseUrl}/scripts/deploy.jps?_r=${fn.random}
-        settings:
-          envName: ${settings.envName}
-          region: {$globals.REGION}
+      settings:
+        envName: ${settings.envName}
+        region: ${globals.REGION}
 
 onBeforeAddNode[cp]:
   stopEvent:

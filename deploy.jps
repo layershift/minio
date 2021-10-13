@@ -47,13 +47,12 @@ onInstall:
   - build-cluster
   - restartContainers [cp]
 
-  - jps: "https://github.com/jelastic-jps/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}",
-      nodeGroup: "bl",
-      skipEmail: "true",
-      settings: {
-        customDomains: "${globals.URL}",
-        fallbackToX1: "false"
-      }
+  - jps: https://github.com/jelastic-jps/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
+    nodeGroup: bl
+    skipEmail: true
+    settings:
+      customDomains: ${globals.URL}
+      fallbackToX1: false
 
   - cmd[cp]: |-
       echo "MINIO_SERVER_URL=\"https://${globals.URL}\"" >> /etc/default/minio
@@ -65,9 +64,9 @@ onInstall:
 actions:
   - build-cluster:
       script: build-cluster.js
-        params:
-         nodeGroup: cp
-         volumePath: ${globals.exportPath}
+      params:
+        nodeGroup: cp
+        volumePath: ${globals.exportPath}
   - install-mc:
       cmd[cp]: |-
         curl https://dl.min.io/client/mc/release/linux-amd64/mc -o $HOME/mcli
