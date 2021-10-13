@@ -26,6 +26,7 @@ settings:
   fields:
     - caption: Env Name    
       type: envname
+      name: envName
       randomName: true
       hidden: false
     - name: nodes
@@ -60,9 +61,8 @@ onInstall:
 
   - install:
       jps: ${baseUrl}/scripts/deploy.jps?_r=${fn.random}
-      settings:
-        envName: ${settings.envName}
-        region: ${globals.REGION}
+      envName: ${settings.envName}
+      region: ${globals.REGION}
 
 onBeforeAddNode[cp]:
   stopEvent:
