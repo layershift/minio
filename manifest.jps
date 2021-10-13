@@ -24,35 +24,45 @@ globals:
   
 settings:
   fields:
+    - caption: Env Name    
+      type: envname
+      randomName: true
+      hidden: false
     - name: nodes
-      caption: Number of nodes
-      type: list
-      inputType: string
-      values:
-        4: 4 nodes
-        8: 8 nodes
-        16: 16 nodes
-      default: 4
+      caption: Cluster nodes
+      tooltip: Determines maximum cluster storage capacity
+      type: slider
+      increment: 2
+      min: 4
+      max: 32
+      useTips: true
+      default: 16
       required: true
-    
-nodes:
-  count: ${settings.nodes}
-  cloudlets: 16
-  nodeGroup: cp
-  nodeType: minio
-  password: ${globals.secretKey}
-  skipNodeEmails: true
-  
-ssl: true
+    - caption: Install Let's Encrypt SSL with Auto-Renewal
+      tooltip: "Issue and install a Let's Encrypt certificate for HTTPS encrypted connection with the Minio cluster"
+      type: checkbox
+      name: le-addon
+      value: true
+      disabled: true
+    - caption: Cluster backups
+      tooltip: Include Minio nodes in our standard scheduled backups (increased cost per GB)
+      name: backups
+      type: toggle
+      value: false
 
 onInstall:
-  - cmd[cp]: |-
-      jem passwd set -p ${globals.secretKey} -u ${globals.accessKey}
-      jem service stop
-      rm -rf /${globals.exportPath}/.minio.sys
-    user: root
-  - build-cluster
-  - restartContainers [cp]
+  - if (${settings.backups:true}):
+      setGlobals:
+        REGION: mcr1-stor
+  - else:
+      setGlobals:
+        REGION: mcr2-stor
+
+  - install:
+      jps: ${baseUrl}/scripts/deploy.jps?_r=${fn.random}
+        settings:
+          envName: ${settings.envName}
+          region: {$globals.REGION}
 
 onBeforeAddNode[cp]:
   stopEvent:
@@ -63,14 +73,6 @@ onBeforeRemoveNode[cp]:
   stopEvent:
     type: warning
     message: Minio does not support scaling; create a new cluster and migrate.
-
-actions:
-  build-cluster:
-    script: build-cluster.js
-    params:
-      nodeGroup: cp
-      volumePath: ${globals.exportPath}
-      port: ${globals.port}
       
 success:
   text: /text/success.md

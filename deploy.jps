@@ -1,0 +1,79 @@
+type: install
+version: 6.1.2
+name: Minio Cluster Deploy
+
+globals:
+  accessKey: ${fn.password}
+  secretKey: ${fn.password(20)}
+  exportPath: /export
+
+nodes:
+  - nodeGroup: bl
+    nodeType: nginx
+    count: 1
+    cloudlets: 16
+    skipNodeEmails: true
+    distribution:
+      mode: STRICT
+      zones:
+        - type: storage
+  - nodeGroup: cp
+    nodeType: minio
+    displayName: Minio Servers
+    count: 4
+    cloudlets: 16
+    password: ${globals.secretKey}
+    skipNodeEmails: true
+    distribution:
+      mode: STRICT
+      zones:
+        - type: storage
+
+onInstall:
+  - env.control.GetEnvInfo:
+      envName: ${settings.envName}
+  - setGlobals:
+      URL: ${response.env.domain}
+
+  - cmd[cp]: |-
+      jem passwd set -p ${globals.secretKey} -u ${globals.accessKey}
+      jem service stop
+      rm -rf /${globals.exportPath}/.minio.sys
+      sed -i 's/$MINIO_OPTS $MINIO_VOLUMES/$MINIO_VOLUMES $MINIO_OPTS/' /etc/systemd/system/minio.service && systemctl daemon-reload
+      echo "MINIO_OPTS='--console-address \":80\"'" >> /etc/default/minio
+      chmod o+w /usr/local/bin && chmod o+w /usr/local/bin/minio
+    user: root
+
+  - build-cluster
+  - restartContainers [cp]
+
+  - jps: "https://github.com/jelastic-jps/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}",
+      nodeGroup: "bl",
+      skipEmail: "true",
+      settings: {
+        customDomains: "${globals.URL}",
+        fallbackToX1: "false"
+      }
+
+  - cmd[cp]: |-
+      echo "MINIO_SERVER_URL=\"https://${globals.URL}\"" >> /etc/default/minio
+      echo "MINIO_BROWSER_REDIRECT_URL=\"https://${globals.URL}\"" >> /etc/default/minio
+
+  - install-mc
+  - update-minio
+
+actions:
+  - build-cluster:
+      script: build-cluster.js
+        params:
+         nodeGroup: cp
+         volumePath: ${globals.exportPath}
+  - install-mc:
+      cmd[cp]: |-
+        curl https://dl.min.io/client/mc/release/linux-amd64/mc -o $HOME/mcli
+        chmod +x $HOME/mcli
+        echo 'export PATH="$PATH:$HOME/mcli"' >> $HOME/.bashrc
+        $HOME/mcli alias set myminio https://${globals.URL} ${globals.accessKey} ${globals.secretKey}
+  - update-minio:
+      cmd[cp]: |-
+        $HOME/mcli admin update myminio
