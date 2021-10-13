@@ -43,12 +43,10 @@ onInstall:
   - build-cluster
   - restartContainers [cp]
 
-  - jps: https://github.com/jelastic-jps/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
-    nodeGroup: bl
-    skipEmail: true
-    settings:
-      customDomains: ${env.domain}
-      fallbackToX1: false
+  - install[bl]:
+      jps: https://github.com/jelastic-jps/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
+      settings:
+        customDomains: ${env.domain}
 
   - cmd[cp]: |-
       echo "MINIO_SERVER_URL=\"${env.url}\"" >> /etc/default/minio
@@ -58,17 +56,19 @@ onInstall:
   - update-minio
 
 actions:
-  - build-cluster:
-      script: ${baseUrl}/build-cluster.js
-      params:
-        nodeGroup: cp
-        volumePath: ${globals.exportPath}
-  - install-mc:
-      cmd[cp]: |-
-        curl https://dl.min.io/client/mc/release/linux-amd64/mc -o $HOME/mcli
-        chmod +x $HOME/mcli
-        echo 'export PATH="$PATH:$HOME/mcli"' >> $HOME/.bashrc
-        $HOME/mcli alias set myminio ${env.url} ${globals.accessKey} ${globals.secretKey}
-  - update-minio:
-      cmd[cp]: |-
-        $HOME/mcli admin update myminio
+  build-cluster:
+    script: ${baseUrl}/build-cluster.js
+    params:
+      nodeGroup: cp
+      volumePath: ${globals.exportPath}
+  
+  install-mc:
+    cmd[cp]: |-
+      curl https://dl.min.io/client/mc/release/linux-amd64/mc -o $HOME/mcli
+      chmod +x $HOME/mcli
+      echo 'export PATH="$PATH:$HOME/mcli"' >> $HOME/.bashrc
+      $HOME/mcli alias set myminio ${env.url} ${globals.accessKey} ${globals.secretKey}
+  
+  update-minio:
+    cmd[cp]: |-
+      $HOME/mcli admin update myminio
