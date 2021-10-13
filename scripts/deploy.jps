@@ -37,7 +37,7 @@ onInstall:
       rm -rf /${globals.exportPath}/.minio.sys
       sed -i 's/$MINIO_OPTS $MINIO_VOLUMES/$MINIO_VOLUMES $MINIO_OPTS/' /etc/systemd/system/minio.service && systemctl daemon-reload
       echo "MINIO_OPTS='--console-address \":80\"'" >> /etc/default/minio
-      chmod o+w /usr/local/bin && chmod o+w /usr/local/bin/minio
+      chmod o+w /usr/local/bin && chmod o+w /usr/local/bin/minio && chown minio-user.minio-user /home/jelastic/
     user: root
 
   - build-cluster
