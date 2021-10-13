@@ -10,6 +10,7 @@ globals:
 nodes:
   - nodeGroup: bl
     nodeType: nginx
+    extip: true
     count: 1
     cloudlets: 16
     skipNodeEmails: true
