@@ -1,6 +1,7 @@
 type: install
 version: 6.1.2
 name: Minio Cluster Deploy
+baseUrl: https://raw.githubusercontent.com/layershift/minio/master
 
 globals:
   accessKey: ${fn.password}
@@ -36,7 +37,7 @@ onInstall:
       jem service stop
       rm -rf /${globals.exportPath}/.minio.sys
       sed -i 's/$MINIO_OPTS $MINIO_VOLUMES/$MINIO_VOLUMES $MINIO_OPTS/' /etc/systemd/system/minio.service && systemctl daemon-reload
-      echo "MINIO_OPTS='--console-address \":80\"'" >> /etc/default/minio
+      echo "MINIO_OPTS='--address \":80\"'" >> /etc/default/minio
       chmod o+w /usr/local/bin && chmod o+w /usr/local/bin/minio && chown minio-user.minio-user /home/jelastic/
     user: root
 
@@ -48,10 +49,17 @@ onInstall:
       settings:
         customDomains: ${env.domain}
 
-  - cmd[cp]: |-
-      echo "MINIO_SERVER_URL=\"${env.url}\"" >> /etc/default/minio
-      echo "MINIO_BROWSER_REDIRECT_URL=\"${env.url}\"" >> /etc/default/minio
+  - cmd[bl]: |-
+      wget ${baseUrl}/conf/console.conf -O /etc/nginx/conf.d/console.conf
+      sed -i 's/ignore_invalid_headers on;/ignore_invalid_headers off;\n\tproxy_buffering off;/' /etc/nginx/nginx-jelastic.conf
+      sed -i '/listen/d' /etc/nginx/conf.d/ssl.conf
+      sed -i '/add_header alt-svc/d' /etc/nginx/conf.d/ssl.conf
+      sed -i 's/server_name/\tlisten\t443 http2 ssl reuseport;\n\tlisten\t[::]:443 http2 ssl reuseport;\n\tserver_name/' /etc/nginx/conf.d/ssl.conf
+      /etc/init.d/nginx restart
+    user: root
 
+  - reset-firewall
+  - configure-firewall
   - install-mc
   - update-minio
 
@@ -66,9 +74,117 @@ actions:
     cmd[cp]: |-
       curl https://dl.min.io/client/mc/release/linux-amd64/mc -o $HOME/mcli
       chmod +x $HOME/mcli
-      echo 'export PATH="$PATH:$HOME/mcli"' >> $HOME/.bashrc
-      $HOME/mcli alias set myminio ${env.url} ${globals.accessKey} ${globals.secretKey}
+      echo 'export PATH="$PATH:$HOME"' >> $HOME/.bashrc
+      $HOME/mcli alias set myminio http://cp ${globals.accessKey} ${globals.secretKey}
   
+  reset-firewall:
+    - script: |
+        var resp = api.env.security.GetRules("${env.name}", session, null, "INPUT");
+        var rules = resp.rules;
+        for (var i = 0, n = rules.length; i < n; i++) {
+          if(rules[i].id > 1 && rules[i].action == "ALLOW") {
+            api.env.security.RemoveRule("${env.name}", session, rules[i].id);
+          }
+        }
+        return { 'result': 0 };
+
+  configure-firewall:
+    - api[bl]:
+      - method: environment.security.addrule
+        params:
+          rule: {
+            "direction": "INPUT",
+            "nodeGroup": "bl",
+            "name": "Minio API",
+            "protocol": "ALL",
+            "ports": "80",
+            "src": "ALL",
+            "priority": 1010,
+            "action": "ALLOW",
+            "isEnabled": "true"
+          }
+    - api[bl]:
+      - method: environment.security.addrule
+        params:
+          rule: {
+            "direction": "INPUT",
+            "nodeGroup": "bl",
+            "name": "Minio API HTTPS",
+            "protocol": "ALL",
+            "ports": "443",
+            "src": "ALL",
+            "priority": 1020,
+            "action": "ALLOW",
+            "isEnabled": "true"
+          }
+    - api[bl]:
+      - method: environment.security.addrule
+        params:
+          rule: {
+            "direction": "INPUT",
+            "nodeGroup": "bl",
+            "name": "Minio Console",
+            "protocol": "ALL",
+            "ports": "9001",
+            "src": "ALL",
+            "priority": 1030,
+            "action": "ALLOW",
+            "isEnabled": "true"
+          }
+
+    - api[cp]:
+      - method: environment.security.addrule
+        params:
+          rule: {
+            "direction": "INPUT",
+            "nodeGroup": "cp",
+            "name": "Minio internal",
+            "protocol": "ALL",
+            "ports": "80",
+            "src": "LOCAL",
+            "priority": 1010,
+            "action": "ALLOW",
+            "isEnabled": "true"
+          }
+    - api[cp]:
+      - method: environment.security.addrule
+        params:
+          rule: {
+            "direction": "INPUT",
+            "nodeGroup": "cp",
+            "name": "Minio API",
+            "protocol": "ALL",
+            "ports": "80",
+            "src": "",
+            "priority": 1020,
+            "action": "ALLOW",
+            "isEnabled": "true",
+            "relatedNodeGroup": "bl"
+          }      
+    - api[cp]:
+      - method: environment.security.addrule
+        params:
+          rule: {
+            "direction": "INPUT",
+            "nodeGroup": "cp",
+            "name": "Minio Console",
+            "protocol": "ALL",
+            "ports": "9001",
+            "src": "",
+            "priority": 1030,
+            "action": "ALLOW",
+            "isEnabled": "true",
+            "relatedNodeGroup": "bl"
+          }
+
   update-minio:
-    cmd[cp]: |-
-      $HOME/mcli admin update myminio
+    - cmd[cp]: |-
+        $HOME/mcli admin update myminio
+        echo "MINIO_SERVER_URL=\"https://${env.domain}\"" >> /etc/default/minio
+        echo "MINIO_BROWSER_REDIRECT_URL=\"https://${env.domain}:9001\"" >> /etc/default/minio
+
+    - cmd[cp]: |-
+        sed -i 's/:80"/:80" --console-address ":9001"/' /etc/default/minio
+      user: root
+
+    - restartContainers [cp]
