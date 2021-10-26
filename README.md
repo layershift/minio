@@ -1,33 +1,23 @@
 # Minio Cluster
 
-The **Minio Cluster** solution by Jelastic automates creation of a scalable and cost-efficient object storage, which is fully compatible with the Amazon S3 (_Simple Storage Service_). The package utilizes [Minio](https://www.minio.io/) microstorage architecture to interconnect a number of separate Docker containers to create a reliable cluster.
+The **Minio Cluster** solution by Layershift automates creation of a scalable and cost-efficient object storage cluster, which is fully compatible with Amazon S3 (_Simple Storage Service_). The package utilises [Minio](https://www.minio.io/) microstorage architecture to interconnect a number of separate Docker containers distributed across separate physical hardware to create a reliable cluster, load balanced behind an Nginx proxy node.
+
+MinIO divides objects into chunks and evenly distributes them among containers in an Erasure Set, protecting against silent data corruption (bitrot). By [adjusting the Storage Class](https://docs.min.io/minio/baremetal/concepts/erasure-coding.html#storage-classes), you can balance the level of redundancy against storage efficiency.
+
+It can be accessed via S3 compatible APIs and the [MinFS fuse driver](https://github.com/minio/minfs).
 
 ![Minio S3 Cluster](images/minio-s3-cluster.png)
 
-Refer to the appropriate [Minio Cluster article](https://jelastic.com/blog/s3-minio-cloud-storage-cluster-in-containers/) to get a detailed overview of this solution.
-
 ## Minio Cluster Installation
 
-Log into your Jelastic account and [import](https://docs.jelastic.com/environment-import) link to the _**manifest.jps**_ file from above.
+[![Deploy](images/getithosted.png)](https://app.j.layershift.co.uk/?manifest=https://raw.githubusercontent.com/layershift/minio/master/manifest.jps)
 
-![Minio Cluster Installation](images/minio-cluster-installation.png)
+Or, log into your Layershift Jelastic account and [import](https://docs.jelastic.com/environment-import) the [manifest.jps](manifest.jps).
 
-> **Note:** Alternatively, you can find this solution within [Jelastic Marketplace](https://docs.jelastic.com/marketplace) or use the following button to automatically register on one of the [public Platforms](https://jelastic.cloud/) and immediately initiate Minio Cluster installation:
-> 
-> [![Deploy](/images/deploy-to-jelastic.png)](https://jelastic.com/install-application/?manifest=https://raw.githubusercontent.com/jelastic-jps/minio/master/manifest.jps&min-version=4.6)
+## Maintenance
 
-Within the appeared form, you need to fetch the next data:
-* **Number of nodes** - specify the required cluster size by choosing among the predefined options to create 1 (for development), 4, 8 or 16 Minio nodes - each of them will be handled in a separate container, which are distributed across available hardware servers to gain [high availability](https://docs.jelastic.com/isolated-containers?utm_source=minio-cluster#b)
-* **Environment** - type in the preferred name for your Minio storage cluster (which, together with your platform domain, will constitute an internal environment name)
-* **Display Name** - optionally, add an [alias name](https://docs.jelastic.com/environment-aliases) to be displayed for the environment in the dashboard
-* **Region** - select a [hardware set](https://docs.jelastic.com/environment-regions) for your environment to be hosted (this option is active only if several regions are available)
+MinIO and MinIO Client can be updated from the Jelastic dashboard.
 
-Click **Install** and in a few minutes your automatically configured storage will be created.
-
-## Working with Minio Cluster
-
-Immediately after the solution installation, you can start working with your storage cluster:
-
-* _**user-friendly web interface**_ - to manage your Minio storage directly in browser; the admin panel access URL and credentials are provided via the appropriate email notification
-
-* _**minio client**_ - to work over the dedicated [command line interface](https://www.minio.io/downloads.html#download-client); refer to the [official documentation](https://docs.minio.io/docs/minio-client-complete-guide) for more information on the tool
+**IMPORTANT**
+* Please consult the [MinIO Release Notes](https://github.com/minio/minio/releases) to be aware of any breaking changes
+* The update affects all MinIO servers at the same time, so please plan for a period of downtime.

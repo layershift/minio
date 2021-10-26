@@ -3,10 +3,23 @@ version: 6.1.2
 name: Minio Cluster Deploy
 baseUrl: https://raw.githubusercontent.com/layershift/minio/master
 
-globals:
-  accessKey: ${fn.password}
-  secretKey: ${fn.password(20)}
-  exportPath: /export
+settings:
+  - name: nodes
+    caption: Cluster nodes
+    tooltip: Determines maximum cluster storage capacity
+    type: slider
+    increment: 2
+    min: 4
+    max: 32
+    useTips: true
+    default: 16
+    required: true
+  - name: accessKey
+    type: string
+  - name: secretKey
+    type: string
+  - name: exportPath
+    type: string
 
 nodes:
   - nodeGroup: bl
@@ -22,9 +35,9 @@ nodes:
   - nodeGroup: cp
     nodeType: minio
     displayName: Minio Servers
-    count: 4
+    count: ${settings.nodes}
     cloudlets: 16
-    password: ${globals.secretKey}
+    password: ${settings.secretKey}
     skipNodeEmails: true
     distribution:
       mode: STRICT
@@ -33,12 +46,13 @@ nodes:
 
 onInstall:
   - cmd[cp]: |-
-      jem passwd set -p ${globals.secretKey} -u ${globals.accessKey}
+      jem passwd set -p ${settings.secretKey} -u ${settings.accessKey}
       jem service stop
-      rm -rf /${globals.exportPath}/.minio.sys
+      rm -rf /${settings.exportPath}/.minio.sys
       sed -i 's/$MINIO_OPTS $MINIO_VOLUMES/$MINIO_VOLUMES $MINIO_OPTS/' /etc/systemd/system/minio.service && systemctl daemon-reload
       echo "MINIO_OPTS='--address \":80\"'" >> /etc/default/minio
       chmod o+w /usr/local/bin && chmod o+w /usr/local/bin/minio && chown minio-user.minio-user /home/jelastic/
+      echo $'\n\nMinio Client is installed as mcli and the local install aliased as myminio: mcli admin info myminio\n' >> /etc/motd
     user: root
 
   - build-cluster
@@ -46,6 +60,7 @@ onInstall:
 
   - install[bl]:
       jps: https://github.com/jelastic-jps/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
+      skipEmail: true
       settings:
         customDomains: ${env.domain}
 
@@ -68,14 +83,14 @@ actions:
     script: ${baseUrl}/build-cluster.js
     params:
       nodeGroup: cp
-      volumePath: ${globals.exportPath}
+      volumePath: ${settings.exportPath}
   
   install-mc:
     cmd[cp]: |-
       curl https://dl.min.io/client/mc/release/linux-amd64/mc -o $HOME/mcli
       chmod +x $HOME/mcli
       echo 'export PATH="$PATH:$HOME"' >> $HOME/.bashrc
-      $HOME/mcli alias set myminio http://cp ${globals.accessKey} ${globals.secretKey}
+      $HOME/mcli alias set myminio http://cp ${settings.accessKey} ${settings.secretKey}
   
   reset-firewall:
     - script: |

@@ -13,13 +13,14 @@ description:
     service, best suited for storing unstructured data such as photos, videos, log
     files and backups.
   short: |
-    Automated clusterization for a reliable and cost-effective Minio storage
+    Automated cluster for a reliable and cost-effective Minio storage
     to keep your unstructured data in a cloud.
+
+targetNodes: minio
 
 globals:
   accessKey: ${fn.password}
-  secretKey: ${fn.password}
-  port: 80
+  secretKey: ${fn.password(20)}
   exportPath: /export
   
 settings:
@@ -29,8 +30,11 @@ settings:
       name: envName
       randomName: true
       hidden: false
-    - name: nodes
-      caption: Cluster nodes
+    - caption: Display Name
+      type: string
+      name: displayName
+    - caption: Cluster nodes
+      name: nodes
       tooltip: Determines maximum cluster storage capacity
       type: slider
       increment: 2
@@ -62,7 +66,13 @@ onInstall:
   - install:
       jps: ${baseUrl}/scripts/deploy.jps?_r=${fn.random}
       envName: ${settings.envName}
+      displayName: ${settings.displayName}
       region: ${globals.REGION}
+      settings:
+        nodes: ${settings.nodes}
+        accessKey: ${globals.accessKey}
+        secretKey: ${globals.secretKey}
+        exportPath: ${globals.exportPath}
 
 onBeforeAddNode[cp]:
   stopEvent:
@@ -73,7 +83,26 @@ onBeforeRemoveNode[cp]:
   stopEvent:
     type: warning
     message: Minio does not support scaling; create a new cluster and migrate.
-      
+
+buttons:
+  - caption: Update MinIO Server
+    confirmText: The cluster will be unavailable for a few minutes during update. Continue?
+    action: update-minio-server
+    successText: MinIO Server update successful
+  - caption: Update MinIO Client
+    confirmText: Update MinIO Client?
+    action: update-minio-server
+    successText: MinIO Client update successful
+
+actions:
+  update-minio-server:
+    - cmd[cp]: |-
+        $HOME/mcli admin update myminio
+
+  update-minio-client:
+    - cmd[cp]: |-
+        $HOME/mcli update
+
 success:
   text: /text/success.md
   email: /text/success.md
