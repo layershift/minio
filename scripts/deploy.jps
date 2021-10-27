@@ -1,10 +1,8 @@
-type: update
+type: install
 version: 6.1.2
 name: Minio Cluster
 baseUrl: https://raw.githubusercontent.com/layershift/minio/master
 logo: images/minio-logo-70x70.png
-
-targetNodes: minio
 
 settings:
   - name: nodes
@@ -66,6 +64,9 @@ onInstall:
       skipEmail: true
       settings:
         customDomains: ${env.domain}
+
+  - install[cp]:
+      jps: scripts/manage.jps
 
   - cmd[bl]: |-
       wget ${baseUrl}/conf/console.conf -O /etc/nginx/conf.d/console.conf
@@ -208,20 +209,6 @@ actions:
         echo "MINIO_BROWSER_REDIRECT_URL=\"https://${env.domain}:9001\"" >> /etc/default/minio
         sed -i 's/:80"/:80" --console-address ":9001"/' /etc/default/minio
       user: root
-
-  update-minio-client:
-    - cmd[cp]: |-
-        $HOME/mcli update
-
-buttons:
-  - caption: Update MinIO Server
-    confirmText: The cluster will be unavailable for a few minutes during update. Continue?
-    action: update-minio-server
-    successText: MinIO Server update successful
-  - caption: Update MinIO Client
-    confirmText: Update MinIO Client?
-    action: update-minio-client
-    successText: MinIO Client update successful
 
 success:
   text: /text/success.md

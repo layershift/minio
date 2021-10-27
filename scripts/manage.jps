@@ -1,0 +1,29 @@
+type: update
+version: 6.1.2
+name: MinIO Cluster Management
+baseUrl: https://raw.githubusercontent.com/layershift/minio/master
+logo: images/minio-logo-70x70.png
+
+targetNodes: minio
+
+actions:
+  update-minio-server:
+    - cmd[${nodes.cp.master.id}]: |-
+        $HOME/mcli admin update myminio
+
+    - restartContainers [cp]
+    
+  update-minio-client:
+    - cmd[cp]: |-
+        $HOME/mcli update
+
+buttons:
+  - caption: Update MinIO Server
+    confirmText: The cluster will be unavailable for a few minutes during update. Continue?
+    action: update-minio-server
+    successText: MinIO Server update successful
+  
+  - caption: Update MinIO Client
+    confirmText: Update the local MinIO Client (mcli) on all MinIO Server nodes?
+    action: update-minio-client
+    successText: MinIO Client update successful
