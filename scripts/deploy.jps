@@ -78,6 +78,7 @@ onInstall:
   - reset-firewall
   - configure-firewall
   - install-mc
+  - reconfigure-minio
   - update-minio-server
 
 actions:
