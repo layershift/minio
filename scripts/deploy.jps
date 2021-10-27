@@ -1,4 +1,4 @@
-type: install
+type: update
 version: 6.1.2
 name: Minio Cluster
 baseUrl: https://raw.githubusercontent.com/layershift/minio/master
@@ -219,7 +219,7 @@ buttons:
     successText: MinIO Server update successful
   - caption: Update MinIO Client
     confirmText: Update MinIO Client?
-    action: update-minio-server
+    action: update-minio-client
     successText: MinIO Client update successful
 
 success:
