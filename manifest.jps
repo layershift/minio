@@ -16,8 +16,6 @@ description:
     Automated cluster for a reliable and cost-effective Minio storage
     to keep your unstructured data in a cloud.
 
-targetNodes: minio
-
 globals:
   accessKey: ${fn.password}
   secretKey: ${fn.password(20)}
@@ -83,26 +81,3 @@ onBeforeRemoveNode[cp]:
   stopEvent:
     type: warning
     message: Minio does not support scaling; create a new cluster and migrate.
-
-buttons:
-  - caption: Update MinIO Server
-    confirmText: The cluster will be unavailable for a few minutes during update. Continue?
-    action: update-minio-server
-    successText: MinIO Server update successful
-  - caption: Update MinIO Client
-    confirmText: Update MinIO Client?
-    action: update-minio-server
-    successText: MinIO Client update successful
-
-actions:
-  update-minio-server:
-    - cmd[cp]: |-
-        $HOME/mcli admin update myminio
-
-  update-minio-client:
-    - cmd[cp]: |-
-        $HOME/mcli update
-
-success:
-  text: /text/success.md
-  email: /text/success.md

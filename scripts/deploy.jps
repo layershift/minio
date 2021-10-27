@@ -1,7 +1,9 @@
 type: install
 version: 6.1.2
-name: Minio Cluster Deploy
+name: Minio Cluster
 baseUrl: https://raw.githubusercontent.com/layershift/minio/master
+
+targetNodes: minio
 
 settings:
   - name: nodes
@@ -52,7 +54,7 @@ onInstall:
       sed -i 's/$MINIO_OPTS $MINIO_VOLUMES/$MINIO_VOLUMES $MINIO_OPTS/' /etc/systemd/system/minio.service && systemctl daemon-reload
       echo "MINIO_OPTS='--address \":80\"'" >> /etc/default/minio
       chmod o+w /usr/local/bin && chmod o+w /usr/local/bin/minio && chown minio-user.minio-user /home/jelastic/
-      echo $'\n\nMinio Client is installed as mcli and the local install aliased as myminio: mcli admin info myminio\n' >> /etc/motd
+      echo $'Minio Client is installed as mcli and the local install aliased as myminio: mcli admin info myminio\n' >> /etc/motd
     user: root
 
   - build-cluster
@@ -76,7 +78,7 @@ onInstall:
   - reset-firewall
   - configure-firewall
   - install-mc
-  - update-minio
+  - update-minio-server
 
 actions:
   build-cluster:
@@ -192,14 +194,33 @@ actions:
             "relatedNodeGroup": "bl"
           }
 
-  update-minio:
-    - cmd[cp]: |-
+  update-minio-server:
+    - cmd[${nodes.cp.master.id}]: |-
         $HOME/mcli admin update myminio
+
+    - restartContainers [cp]
+  
+  reconfigure-minio:
+    - cmd[cp]: |-
         echo "MINIO_SERVER_URL=\"https://${env.domain}\"" >> /etc/default/minio
         echo "MINIO_BROWSER_REDIRECT_URL=\"https://${env.domain}:9001\"" >> /etc/default/minio
-
-    - cmd[cp]: |-
         sed -i 's/:80"/:80" --console-address ":9001"/' /etc/default/minio
       user: root
 
-    - restartContainers [cp]
+  update-minio-client:
+    - cmd[cp]: |-
+        $HOME/mcli update
+
+buttons:
+  - caption: Update MinIO Server
+    confirmText: The cluster will be unavailable for a few minutes during update. Continue?
+    action: update-minio-server
+    successText: MinIO Server update successful
+  - caption: Update MinIO Client
+    confirmText: Update MinIO Client?
+    action: update-minio-server
+    successText: MinIO Client update successful
+
+success:
+  text: /text/success.md
+  email: /text/success.md
