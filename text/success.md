@@ -1,14 +1,14 @@
 Your [MinIO](https://docs.min.io/minio/baremetal/introduction/minio-overview.html) servers are currently at the latest version, and can be further updated in future [via the option in the Jelastic dashboard](https://github.com/layershift/minio#maintenance) or the [corresponding Minio Client command](https://docs.min.io/minio/baremetal/reference/minio-cli/minio-mc-admin/mc-admin-update.html).
 
-Access your cluster using the details below:
+Access your cluster using:
 
-MinIO endpoint: [https://${env.domain}]([https://${env.domain})
-MinIO Console: [https://${env.domain}:9001](https://${env.domain}:9001)  
+* MinIO endpoint: [https://${env.domain}]([https://${env.domain})
+* MinIO Console: [https://${env.domain}:9001](https://${env.domain}:9001)
 
 Both URLs are proxied via an Nginx load balancer, secured with an automatically renewing Let's Encrypt certificate.
 
-Access Key / Username: ${settings.accessKey}  
-Secret Key / Password: ${settings.secretKey}  
+* Access Key / Username: **${settings.accessKey}**
+* Secret Key / Password: **${settings.secretKey}**
 
 Please refer to [MinIO Identity and Access Management](https://docs.min.io/minio/baremetal/security/minio-identity-management/basic-authentication-with-minio-identity-provider.html) for guidance about user management.
 
