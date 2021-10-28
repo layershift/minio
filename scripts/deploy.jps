@@ -83,6 +83,16 @@ onInstall:
   - reconfigure-minio
   - update-minio-server
 
+onBeforeAddNode[cp]:
+  stopEvent:
+    type: warning
+    message: Minio does not support scaling; create a new cluster and migrate.
+
+onBeforeRemoveNode[cp]:
+  stopEvent:
+    type: warning
+    message: Minio does not support scaling; create a new cluster and migrate.
+
 actions:
   build-cluster:
     script: ${baseUrl}/build-cluster.js

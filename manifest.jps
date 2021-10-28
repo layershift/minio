@@ -71,13 +71,3 @@ onInstall:
         accessKey: ${globals.accessKey}
         secretKey: ${globals.secretKey}
         exportPath: ${globals.exportPath}
-
-onBeforeAddNode[cp]:
-  stopEvent:
-    type: warning
-    message: Minio does not support scaling; create a new cluster and migrate.
-
-onBeforeRemoveNode[cp]:
-  stopEvent:
-    type: warning
-    message: Minio does not support scaling; create a new cluster and migrate.
