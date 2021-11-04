@@ -74,6 +74,7 @@ onInstall:
       sed -i '/listen/d' /etc/nginx/conf.d/ssl.conf
       sed -i '/add_header alt-svc/d' /etc/nginx/conf.d/ssl.conf
       sed -i 's/server_name/\tlisten\t443 http2 ssl reuseport;\n\tlisten\t[::]:443 http2 ssl reuseport;\n\tserver_name/' /etc/nginx/conf.d/ssl.conf
+      sed -i 's/client_max_body_size.*;/client_max_body_size 0;/' /etc/nginx/nginx-jelastic.conf
       /etc/init.d/nginx restart
     user: root
 
