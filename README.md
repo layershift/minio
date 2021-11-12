@@ -21,7 +21,7 @@ Note that number of nodes cannot be modified later, so to avoid having to create
 Raw capacity of your MinIO cluster depends on the maximum storage capacity allowed per node (generally 200GB) times the number of nodes you select for your MinIO cluster. However the usable capacity and efficiency of the cluster does depend on other factors as well. Please see the below table for the usable capacity, efficiency and failure tolerance depending on the number of nodes you select.
 
 | Number of cluster nodes | Usable Capacity | Raw Capacity | Storage Efficiency | Server Failure Tolerance                 |
-|-------------------------|-----------------|--------------|--------------------|------------------------------------------|
+|:-----------------------:|:---------------:|:------------:|:------------------:|------------------------------------------|
 |                       4 | 400GB           | 800GB        | 50%                | 1 server in total                        |
 |                       6 | 600GB           | 1.2TB        | 50%                | 2 servers in total                       |
 |                       8 | 800GB           | 1.6TB        | 50%                | 3 servers in total                       |
