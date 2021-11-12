@@ -14,6 +14,31 @@ It can be accessed via S3 compatible APIs and the [MinFS fuse driver](https://gi
 
 Or, log into your Layershift Jelastic account and [import](https://docs.jelastic.com/environment-import) the [manifest.jps](manifest.jps).
 
+## Capacity / Number of cluster nodes
+
+Note that number of nodes cannot be modified later, so to avoid having to create a new cluster and migrate to it, it's better to plan ahead based on your capacity requirements.
+
+Raw capacity of your MinIO cluster depends on the maximum storage capacity allowed per node (generally 200GB) times the number of nodes you select for your MinIO cluster. However the usable capacity and efficiency of the cluster does depend on other factors as well. Please see the below table for the usable capacity, efficiency and failure tolerance depending on the number of nodes you select.
+
+| Number of cluster nodes | Usable Capacity | Raw Capacity | Storage Efficiency | Server Failure Tolerance                 |
+|-------------------------|-----------------|--------------|--------------------|------------------------------------------|
+|                       4 | 400GB           | 800GB        | 50%                | 1 server in total                        |
+|                       6 | 600GB           | 1.2TB        | 50%                | 2 servers in total                       |
+|                       8 | 800GB           | 1.6TB        | 50%                | 3 servers in total                       |
+|                      10 | 1TB             | 2TB          | 50%                | 2 servers in total                       |
+|                      12 | 1.2TB           | 2.4TB        | 50%                | 5 servers in total                       |
+|                      14 | 1.4TB           | 2.8TB        | 50%                | 6 servers in total                       |
+|                      16 | 2.4TB           | 3.2TB        | 75%                | 4 servers in total (4 out of 16 servers) |
+|                      18 | 2TB             | 3.6TB        | 55%                | 8 servers in total (4 out of 9 servers)  |
+|                      20 | 2.4TB           | 4TB          | 60%                | 8 servers in total (4 out of 10 servers) |
+|                      22 | 2.8TB           | 4.4TB        | 63%                | 8 servers in total (4 out of 11 servers) |
+|                      24 | 3.2TB           | 4.8TB        | 66%                | 8 servers in total (4 out of 12 servers) |
+|                      26 | 360TB           | 5.2TB        | 69%                | 8 servers in total (4 out of 13 servers) |
+|                      28 | 4TB             | 5.6TB        | 71%                | 8 servers in total (4 out of 14 servers) |
+|                      30 | 4.4TB           | 6TB          | 73%                | 8 servers in total (4 out of 15 servers) |
+|                      32 | 4.8TB           | 6.4TB        | 75%                | 8 servers in total (4 out of 16 servers) |
+
+
 ## Maintenance
 
 MinIO and MinIO Client can be updated from the Jelastic dashboard.
