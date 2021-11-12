@@ -12,6 +12,12 @@ description:
     Minio is an object storage server, compatible with Amazon S3 cloud storage
     service, best suited for storing unstructured data such as photos, videos, log
     files and backups.
+    
+    The MinIO cluster incorporates redundancy and (optional) versioning features, 
+    so **we do not take backups of these nodes by default**. 
+    
+    If you want your MinIO nodes to be backed up anyway, please enable 'Cluster 
+    backups' below (additional per GB cost applies).
   short: |
     Automated cluster for a reliable and cost-effective Minio storage
     to keep your unstructured data in a cloud.
@@ -48,7 +54,7 @@ settings:
       value: true
       disabled: true
     - caption: Cluster backups
-      tooltip: Include Minio nodes in our standard scheduled backups (increased cost per GB)
+      tooltip: Enable 6 hour backups, 14 day retention (increased cost per GB)
       name: backups
       type: toggle
       value: false
